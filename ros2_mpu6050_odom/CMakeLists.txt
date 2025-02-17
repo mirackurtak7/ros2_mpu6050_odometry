@@ -19,14 +19,42 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)          # Yeni eklenen
+find_package(geometry_msgs REQUIRED)     # Yeni eklenen
+find_package(tf2_ros REQUIRED)           # Yeni eklenen
 
+# MPU6050 Driver Node
 add_executable(mpu6050driver src/mpu6050driver.cpp src/mpu6050sensor.cpp)
 ament_target_dependencies(mpu6050driver rclcpp sensor_msgs)
 target_link_libraries(mpu6050driver i2c)
 target_include_directories(
-  mpu6050driver PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                       $<INSTALL_INTERFACE:include>)
+  mpu6050driver PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
-install(TARGETS mpu6050driver DESTINATION lib/${PROJECT_NAME})
-install(DIRECTORY launch params DESTINATION share/${PROJECT_NAME}/)
+# Odometry Node (Yeni eklenen)
+add_executable(odometry_node src/odom.py)
+ament_target_dependencies(
+  odom
+  rclpy
+  nav_msgs
+  geometry_msgs
+  tf2_ros
+  sensor_msgs
+)
+
+# Install hedefleri
+install(TARGETS 
+  mpu6050driver
+  odometry_node          # Yeni eklenen
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY 
+  launch 
+  params 
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 ament_package()
